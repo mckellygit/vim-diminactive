@@ -462,6 +462,16 @@ fun! s:Leave(...)
   let s:debug_indent-=1
 endfun
 
+" dim all other windows after entering quickfix ...
+fun! s:MCKDim1(...)
+  let tabnr = tabpagenr()
+  call s:Debug('Handle all left window(s) because we are in quickfix')
+  for w in range(1, tabpagewinnr(tabnr, '$'))
+    call s:Leave(tabnr, w)
+    noautocmd call settabwinvar(tabnr, w, 'diminactive_left_window', 0)
+  endfor
+endfun
+
 " Setup autocommands and init dimming.
 fun! s:Setup(...)
   let refresh = a:0 ? a:1 : 0
@@ -500,6 +510,9 @@ fun! s:Setup(...)
             \ | call s:SetupWindows()
       autocmd TabEnter   * call s:Debug('EVENT: TabEnter')
             \ | call s:SetupWindows()
+
+      " added so we can dim all other windows when entering quickfix ...
+      autocmd FileType qf call s:MCKDim1()
 
       if g:diminactive_enable_focus
         autocmd FocusGained * call s:Debug('EVENT: FocusGained', {'b': bufnr('%')}) | call s:Enter()
